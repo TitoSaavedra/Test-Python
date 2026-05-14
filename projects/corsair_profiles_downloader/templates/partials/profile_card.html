@@ -1,0 +1,25 @@
+<article
+    class="theme-card"
+    data-open-profile="true"
+    tabindex="0"
+    role="button"
+    data-title="{{ profile.display_title }}"
+    data-category="{{ profile.category }}"
+    data-version="{{ profile.version }}"
+    data-video-embed="{{ profile.youtube_embed_url or '' }}"
+    data-video-link="{{ profile.youtube_url or '' }}"
+    data-download-link="{{ profile.zip_files[0] if profile.zip_files else '' }}"
+    data-included="{{ profile.included_profiles | join('||') }}"
+>
+    <div class="theme-card__media">
+        {% if profile.image_url %}
+        <img src="{{ profile.image_url }}" alt="{{ profile.display_title }} preview" loading="lazy" />
+        {% else %}
+        <div class="theme-card__fallback">No Image</div>
+        {% endif %}
+    </div>
+    <span class="theme-card__name">{{ profile.display_title }}</span>
+    <span class="theme-card__meta">{{ profile.category }}</span>
+    <span class="theme-card__meta">{{ profile.version }}</span>
+    <span class="theme-card__meta">Effects: {{ profile.included_profiles | length }}</span>
+</article>

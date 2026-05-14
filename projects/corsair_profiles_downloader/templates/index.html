@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="page-shell">
+    <section class="controls" aria-label="Filters">
+        <label class="control-item" for="searchInput">
+            Search
+            <input id="searchInput" name="query" type="search" placeholder="Try: cyberpunk, rainbow, halloween" value="{{ active_query }}" />
+        </label>
+
+        <label class="control-item" for="categorySelect">
+            Category
+            <select id="categorySelect" name="category">
+                <option value="All" {% if active_category == "All" %}selected{% endif %}>All</option>
+                {% for category in categories %}
+                <option value="{{ category }}" {% if active_category == category %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label class="control-item" for="versionSelect">
+            Version
+            <select id="versionSelect" name="version">
+                <option value="All" {% if active_version == "All" %}selected{% endif %}>All</option>
+                {% for version in versions %}
+                <option value="{{ version }}" {% if active_version == version %}selected{% endif %}>{{ version }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <div class="stats" id="statsPanel">Showing {{ visible_count }} of {{ all_count }} profiles</div>
+    </section>
+
+    <section id="profileResults">
+        {% include "partials/profiles_grid.html" %}
+    </section>
+</main>
+
+<section id="profileModal" class="profile-modal" hidden>
+    <div class="profile-modal__backdrop" data-close-modal="true"></div>
+    <article class="profile-modal__card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <button type="button" class="modal-close" data-close-modal="true" aria-label="Close">Close</button>
+        <header class="modal-head">
+            <p id="modalMeta" class="modal-meta"></p>
+            <h2 id="modalTitle"></h2>
+        </header>
+
+        <div class="modal-layout">
+            <div class="modal-video-wrap">
+                <iframe
+                    id="modalVideoFrame"
+                    src=""
+                    title="Profile video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen
+                ></iframe>
+            </div>
+
+            <aside class="modal-sidebar">
+                <h3>Included Effects</h3>
+                <ul id="modalIncludedList" class="modal-included-list"></ul>
+                <div class="modal-actions">
+                    <a id="modalDownloadBtn" class="btn btn-primary" href="#">Download ZIP</a>
+                    <a id="modalYoutubeBtn" class="btn btn-ghost" href="#" target="_blank" rel="noreferrer">Open YouTube</a>
+                </div>
+            </aside>
+        </div>
+    </article>
+</section>
+{% endblock %}

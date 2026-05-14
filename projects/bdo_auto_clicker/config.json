@@ -1,0 +1,17 @@
+{
+    "regions": {
+        "recolectar": null,
+        "obtener": {
+            "x": 2895,
+            "y": 798,
+            "w": 370,
+            "h": 253
+        },
+        "espera": null
+    },
+    "thresholds": {
+        "recolectar": 0.65,
+        "obtener": 0.7,
+        "espera": 0.3
+    }
+}

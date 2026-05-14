@@ -1,0 +1,12 @@
+{% if profiles %}
+<div class="profile-grid">
+    {% for profile in profiles %}
+        {% include "partials/profile_card.html" %}
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <h2>No profiles matched your filters</h2>
+    <p>Try a different keyword or switch category/version.</p>
+</div>
+{% endif %}
