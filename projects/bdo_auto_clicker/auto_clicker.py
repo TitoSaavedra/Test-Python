@@ -26,9 +26,14 @@ class BDOAutoClicker:
 
         self.state = "idle"
         self.last_action_time = 0
+        self.state_lock = threading.Lock()
+        self.recolectar_fast_checks = 8
+        self.recolectar_fast_interval = 0.03
+        self.recolectar_confirm_delay = 0.25
         self.obtener_fast_checks = 8
         self.obtener_fast_interval = 0.03
         self.stop_event = threading.Event()
+        self.recolectar_thread = None
         self.obtener_thread = None
 
     def load_runtime_config(self) -> dict:
@@ -207,16 +212,52 @@ class BDOAutoClicker:
                 time.sleep(self.obtener_fast_interval)
         return False
 
+    def detect_r_button_pattern_aggressive(self) -> bool:
+        for attempt in range(self.recolectar_fast_checks):
+            if self.detect_r_button_pattern():
+                log.info("Recolectar detected in aggressive loop (attempt %s)", attempt + 1)
+                return True
+            if attempt < self.recolectar_fast_checks - 1:
+                time.sleep(self.recolectar_fast_interval)
+        return False
+
+    def recolectar_worker_loop(self) -> None:
+        log.info("Recolectar worker thread started")
+        while not self.stop_event.is_set():
+            if self.is_running:
+                with self.state_lock:
+                    current_state = self.state
+
+                if current_state == "idle":
+                    if self.detect_r_button_pattern_aggressive():
+                        log.info("Recolectar detectado, esperando confirmación antes de presionar R.")
+                        time.sleep(self.recolectar_confirm_delay)
+                        if self.is_running and self.detect_r_button_pattern():
+                            self.press_r_key()
+                            with self.state_lock:
+                                self.state = "waiting_obtener"
+                                self.last_action_time = time.time()
+                            log.info("State changed: waiting_obtener")
+
+            time.sleep(0.02)
+        log.info("Recolectar worker thread stopped")
+
     def obtener_worker_loop(self) -> None:
         log.info("Obtener worker thread started")
         while not self.stop_event.is_set():
-            if self.is_running and self.state == "waiting_obtener":
-                if self.detect_inventory_list_aggressive():
-                    log.info("Obtener detectado, ejecutando acción de obtención.")
-                    self.press_r_key()
-                    self.state = "idle"
-                    log.info("State changed: idle")
-            time.sleep(0.05)
+            if self.is_running:
+                with self.state_lock:
+                    current_state = self.state
+
+                if current_state == "waiting_obtener":
+                    if self.detect_inventory_list_aggressive():
+                        log.info("Obtener detectado, ejecutando acción de obtención.")
+                        self.press_r_key()
+                        with self.state_lock:
+                            self.state = "idle"
+                        log.info("State changed: idle")
+
+            time.sleep(0.02)
         log.info("Obtener worker thread stopped")
 
     def press_r_key_keybd_event(self) -> bool:
@@ -248,6 +289,11 @@ class BDOAutoClicker:
         )
         listener_thread.start()
 
+        self.recolectar_thread = threading.Thread(
+            target=self.recolectar_worker_loop, daemon=True
+        )
+        self.recolectar_thread.start()
+
         self.obtener_thread = threading.Thread(
             target=self.obtener_worker_loop, daemon=True
         )
@@ -260,20 +306,9 @@ class BDOAutoClicker:
         try:
             while True:
                 if self.is_running:
-                    current_time = time.time()
-
-                    log.debug(f"Current state: {self.state}")
-
-                    if self.state == "idle":
-                        log.debug("State: idle. Checking for Recolectar pattern...")
-                        if self.detect_r_button_pattern():
-                            log.info("Recolectar detectado, ejecutando acción de recolección.")
-                            self.press_r_key()
-                            self.state = "waiting_obtener"
-                            self.last_action_time = current_time
-                            log.info("State changed: waiting_obtener")
-                    elif self.state == "waiting_obtener":
-                        log.debug("State: waiting_obtener. Worker thread is scanning Obtener...")
+                    with self.state_lock:
+                        current_state = self.state
+                    log.debug("Current state: %s", current_state)
 
                 else:
                     log.debug("Paused. Waiting for F6 to resume...")
@@ -283,3 +318,7 @@ class BDOAutoClicker:
             log.info("Interrupted by user")
         finally:
             self.stop_event.set()
+            if self.recolectar_thread is not None:
+                self.recolectar_thread.join()
+            if self.obtener_thread is not None:
+                self.obtener_thread.join()

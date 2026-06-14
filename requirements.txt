@@ -8,3 +8,4 @@ pynput>=1.7.6
 pillow>=10.1.0
 opencv-python>=4.8.1.78
 pydirectinput>=1.0.4
+customtkinter>=5.0.0
