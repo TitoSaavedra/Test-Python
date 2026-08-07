@@ -1,0 +1,6 @@
+[tools]
+python = "3.12"
+
+[tasks.dev]
+description = "Monorepo de utilidades Python independientes (ver CLAUDE.md/README.md). No hay un único entrypoint: se eligió projects/corsair_profiles_downloader/main.py (scraper de perfiles Corsair) por ser el proyecto destacado en el README. Instalar deps compartidas con 'pip install -r requirements.txt' (o setup_env.ps1) antes de ejecutar. Otros entrypoints disponibles: projects/bdo_auto_clicker/main.py, projects/notification_overlay_tester/main.py, y 'uvicorn projects.corsair_profiles_downloader.web_app:app --reload' para la galería web"
+run = "python projects/corsair_profiles_downloader/main.py"
